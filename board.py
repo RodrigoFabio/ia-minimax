@@ -7,7 +7,7 @@ import subprocess
 pygame.init()
 
 # Configuration
-PROGRAM_1 = ['python', 'ia-random.py']
+PROGRAM_1 = ['python', 'ia-dummy.py']
 PROGRAM_2 = ['python', 'rodrigo_codigo.py']
 WIDTH, HEIGHT = 500, 500
 GRID_SIZE = 5
@@ -279,7 +279,6 @@ while running:
     else:
         parameter = PROGRAM_2 + ['2'] + [''.join(str(item) for item in board)] + [str(lifes[0]), str(lifes[1])] + [str(bullets[0]), str(bullets[1])]
     command = subprocess.getoutput(parameter)
-    print(command)
     time.sleep(0.3)
 
     # Updating

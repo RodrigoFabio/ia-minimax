@@ -1,6 +1,5 @@
 import sys
 import copy
-
 class Estado:
     def __init__(self, matriz, vida1, vida2, municao1, municao2):
         self.heuristica =  0
@@ -22,7 +21,7 @@ class Estado:
                 if (self.matriz[i][j] == elementoBuscar):
                     return [i,j]
         return [-1,-1]
-
+  
 def verificaAdversarioPerto(estado):
     pos1 = estado.getPosicaoElemento(1)
     pos2 = estado.getPosicaoElemento(2)
@@ -96,11 +95,15 @@ def estadosMovimentacao(jogador, estado):
             
     return listaMovimentosEstados
 
+
+
 #gerar estados sucessores
 def geraEstadosFilhos(jogador, estado):
     listaEstados = []  
     adversarioPerto = verificaAdversarioPerto(estado)
-
+    #estado onde nos atacamos, ficamos no mesmo lugar
+    #apenas muda-se o atributo jogada indicando que foi feito um ataque, indicando ataue 1 ou 2
+    #se a ultima jogada feita tiver sido um ataque, verificar dano e diminuir vida
     if(jogador ==1):
         novoEstado = copy.deepcopy(estado)
         #ataque
@@ -108,21 +111,26 @@ def geraEstadosFilhos(jogador, estado):
             novoEstado.vida1 = novoEstado.vida1 - 1
         if(estado.ultimaJogada == 'ataque2' and adversarioPerto):
             novoEstado.vida1 = novoEstado.vida1 - 2
-
+        
         if(novoEstado.municao1 > 0):
             novoEstado.ultimaJogada = 'ataque2'
             novoEstado.municao1 = novoEstado.municao1 - 1
         else:
              novoEstado.ultimaJogada = 'ataque1'
         listaEstados.append(novoEstado)
+        #ataque
 
         #defesa
+        #estado onde ele defende
+        #se a ultima jogada tiver sido um ataque2 entao deve-se diminuir a vida em 1 ponto 
+        #muda-se o atributo jogada indicando que ele se defendeu
+
         novoEstado1 = copy.deepcopy(estado)
         if(estado.ultimaJogada == 'ataque2' and adversarioPerto):
             novoEstado1.vida1 = novoEstado1.vida1 - 1
         novoEstado1.ultimaJogada= 'defesa'
         listaEstados.append(novoEstado1)
-
+        #defesa
     else:
         novoEstado = copy.deepcopy(estado)
         if(estado.ultimaJogada == 'ataque1' and adversarioPerto):
@@ -139,74 +147,21 @@ def geraEstadosFilhos(jogador, estado):
         listaEstados.append(novoEstado)
 
         #defesa
+        #estado onde ele defende
+        #se a ultima jogada tiver sido um ataque2 entao deve-se diminuir a vida em 1 ponto 
+        #muda-se o atributo jogada indicando que ele se defendeu
+
         novoEstado1 = copy.deepcopy(estado)
         if(estado.ultimaJogada == 'ataque2' and adversarioPerto):
             novoEstado1.vida2 = novoEstado1.vida2 - 1
         novoEstado1.ultimaJogada= 'defesa'
         listaEstados.append(novoEstado1)
+        #defesa
   
     movimentosPermitidos = estadosMovimentacao(jogador, estado)
-    for estadoMovimento in movimentosPermitidos:
-        listaEstados.append(estadoMovimento)
-       
+    
     return listaEstados
 
-def avaliacaoEstado(estado):
-    dano = 1
-    posicaoMax = estado.getPosicaoElemento(1)
-    posicaoMin = estado.getPosicaoElemento(2)
-    posicaoVida = estado.getPosicaoElemento(4)
-    posicaoArma = estado.getPosicaoElemento(3)
-
-    dano = 1
-    if(estado.municao1 > 0 or estado.municao2 > 0):
-        dano = 2
-        heuristica = ((estado.vida1 + dano * estado.municao1) - (estado.vida2 + dano * estado.municao2))
-        return heuristica
-
-    if(estado.vida1 < 9 or estado.vida2 < 9):
-        if(posicaoVida[0] > -1):
-            distanciaMaxVida = abs(posicaoMax[0] - posicaoVida[0]) + abs(posicaoMax[1] - posicaoVida[1])
-            distanciaMinVida = abs(posicaoMin[0] - posicaoVida[0]) + abs(posicaoMin[1] - posicaoVida[1])
-            return (- distanciaMaxVida + distanciaMinVida)    
-
-    if(posicaoArma[0] > -1):
-        distanciaMaxMin = abs(posicaoMax[0] - posicaoMin[0]) + abs(posicaoMax[1] - posicaoMin[1])
-        distanciaMaxArma = abs(posicaoMax[0] - posicaoArma[0]) + abs(posicaoMax[1] - posicaoArma[1])
-        distanciaMinArma = abs(posicaoMin[0] - posicaoArma[0]) + abs(posicaoMin[1] - posicaoArma[1])
-
-        heuristica =   (-distanciaMaxArma + distanciaMinArma)* (distanciaMaxMin/100)
-        return heuristica
-     
-def MiniMax(jogador, estado, profundidade):
-    if profundidade == 0 or estado.vida1 == 0 or estado.vida2 == 0:
-        estado.heuristica = avaliacaoEstado(estado)
-        return estado
-    
-    if(jogador == 1): #jogador 1 MAX
-        melhorValor = -100000000000000
-        melhorEstado =  None
-        estadosFilhos = geraEstadosFilhos(jogador, estado)  
-        for estadoFilho in estadosFilhos:    
-            estadoRetornado = MiniMax(2, estadoFilho, profundidade-1)
-            melhorValor= max(melhorValor, estadoRetornado.heuristica)
-            if(estadoRetornado.heuristica == melhorValor):
-                melhorEstado = estadoRetornado
-        return melhorEstado
-
-    else: #jogador 2 MIN
-        melhorValor = 100000000000000
-        melhorEstado =  None
-        estadosFilhos = geraEstadosFilhos(jogador, estado)
-        for estadoFilho in estadosFilhos:        
-            estadoRetornado = MiniMax(1, estadoFilho, profundidade-1)
-            melhorValor = min(melhorValor, estadoRetornado.heuristica)
-            if(estadoRetornado.heuristica == melhorValor):
-                melhorEstado = estadoRetornado
-        return melhorEstado
-
-            
-#receber parametros por linha de comando
 jogador = sys.argv[1]
 estadoTerminal = sys.argv[2]
 matriz = [[int(char) for char in estadoTerminal[i:i+5]] for i in range(0, len(estadoTerminal),  5)]
@@ -216,23 +171,8 @@ municao1 = sys.argv[5]
 municao2 = sys.argv[6]
 novoEstado = Estado(matriz, int(vida1), int(vida2), int(municao1), int(municao2))
 
-retornoMinimax = MiniMax(1, novoEstado, 2)
-match retornoMinimax.ultimaJogada:
-    case 'ataque1':
-        print("attack")
-    case 'ataque2':
-        print("attack")
-    case 'cima':
-        print("up")
-    case 'esquerda':
-        print("left")
-    case 'direita':
-        print("right")
-    case 'baixo':
-        print("down")
-    case 'defesa':
-        print("block")
-  
+listaMovs = estadosMovimentacao(1, novoEstado)
 
-
-    
+for mov in listaMovs:
+    print(vars(mov))
+    #
