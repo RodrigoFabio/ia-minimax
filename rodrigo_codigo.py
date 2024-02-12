@@ -15,8 +15,6 @@ class Estado:
         self.posicaoArma = self.getPosicaoElemento(3)
 
     def getPosicaoElemento(self, elementoBuscar):
-        #se elementoBuscar == 4 entao percorre o tabuleiro 5x5 (this.matriz) e retorna a posição que está o numero 4(vida)
-        #se elementoBuscar == 4 entao percorre  o tabuleiro 5x5 (this.matriz) e retorna a posição que está o numero 3(arma)
         for i in range(5):
             for j in range(5):
                 if (self.matriz[i][j] == elementoBuscar):
@@ -24,11 +22,11 @@ class Estado:
         return [-1,-1]
 
 def verificaAdversarioPerto(estado):
-    pos1 = estado.getPosicaoElemento(1)
-    pos2 = estado.getPosicaoElemento(2)
+    posMax = estado.getPosicaoElemento(1)
+    posMin = estado.getPosicaoElemento(2)
 
-    diferencaLinha = abs(pos1[0] - pos2[0])
-    diferencaColuna = abs(pos1[1] - pos2[1])
+    diferencaLinha = abs(posMax[0] - posMin[0])
+    diferencaColuna = abs(posMax[1] - posMin[1])
 
     if(diferencaLinha >= 1 and diferencaColuna >= 1):
         return True
@@ -42,7 +40,7 @@ def estadosMovimentacao(jogador, estado):
     adversario = 2 if jogador == 1 else 1
     novoEstado = None
 
-    #cima
+    #Verifica se é possível se mover para cima
     if(linha - 1 >= 0):
         if(estado.matriz[linha-1][coluna] != adversario):
             novoEstado = copy.deepcopy(estado)
@@ -55,7 +53,7 @@ def estadosMovimentacao(jogador, estado):
             novoEstado.ultimaJogada = 'cima'
             listaMovimentosEstados.append(novoEstado)
 
-    #baixo
+    #Verifica se é possível se mover para baixo
     if(linha + 1 <= 4):
         if(estado.matriz[linha + 1][coluna] != adversario):
             novoEstado = copy.deepcopy(estado)
@@ -68,7 +66,7 @@ def estadosMovimentacao(jogador, estado):
             novoEstado.ultimaJogada = 'baixo'
             listaMovimentosEstados.append(novoEstado)
 
-    #esquerda
+    #Verifica se é possível se mover para esquerda
     if(coluna - 1 >= 0):
         if(estado.matriz[linha][coluna - 1] != adversario):
             novoEstado = copy.deepcopy(estado)
@@ -81,7 +79,7 @@ def estadosMovimentacao(jogador, estado):
             novoEstado.ultimaJogada = 'esquerda'
             listaMovimentosEstados.append(novoEstado)
 
-    #direita
+    #Verifica se é possível se mover para direita
     if(coluna + 1  <= 4):
         if(estado.matriz[linha][coluna + 1] != adversario):
             novoEstado = copy.deepcopy(estado)
@@ -96,12 +94,11 @@ def estadosMovimentacao(jogador, estado):
             
     return listaMovimentosEstados
 
-#gerar estados sucessores
 def geraEstadosFilhos(jogador, estado):
     listaEstados = []  
     adversarioPerto = verificaAdversarioPerto(estado)
 
-    if(jogador ==1):
+    if(jogador ==1):# gera estado de ataque e defesa para MAX (1)
         novoEstado = copy.deepcopy(estado)
         #ataque
         if(estado.ultimaJogada == 'ataque1' and adversarioPerto):   
@@ -122,8 +119,7 @@ def geraEstadosFilhos(jogador, estado):
             novoEstado1.vida1 = novoEstado1.vida1 - 1
         novoEstado1.ultimaJogada= 'defesa'
         listaEstados.append(novoEstado1)
-
-    else:
+    else:# gera estado de ataque e defesa para MIN (2)
         novoEstado = copy.deepcopy(estado)
         if(estado.ultimaJogada == 'ataque1' and adversarioPerto):
             novoEstado.vida2 = novoEstado.vida2 - 1
@@ -145,6 +141,7 @@ def geraEstadosFilhos(jogador, estado):
         novoEstado1.ultimaJogada= 'defesa'
         listaEstados.append(novoEstado1)
   
+    #gera estados referentes a movimentações possíveis no tabuleiro
     movimentosPermitidos = estadosMovimentacao(jogador, estado)
     for estadoMovimento in movimentosPermitidos:
         listaEstados.append(estadoMovimento)
